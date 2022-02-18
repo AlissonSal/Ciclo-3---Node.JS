@@ -79,7 +79,7 @@ app.post('/pedidos', async(rep,res)=>{
     // res.send('Pedido criado com sucesso!');
 })
 
-app.post('/itemPedidos', async(rep,res)=>{
+app.post('/itenspedido', async(rep,res)=>{
     await itempedido.create(
         rep.body
         // PedidoId: 1,
@@ -113,6 +113,46 @@ app.post('/itemPedidos', async(rep,res)=>{
 // });
 
 let port=process.env.PORT || 3001;
+
+app.get('/listaservicos', async(req,res)=>{
+    await servico.findAll({
+        // raw: true
+        order:[['nome','ASC']]
+    }).then(function(servicos){
+        res.json({servicos})
+    });
+});
+
+app.get('/ofertaservicos', async(req,res)=>{
+    await servico.count('id').then(function(servicos){
+        res.json({servicos});
+    });
+});
+
+app.get('/servico/:id', async(req,res)=>{
+    await servico.findByPk(req.params.id)
+    .then(serv =>{
+        return res.json({
+            error: false,
+            serv
+        });
+    }).catch(function(erro){
+        return res.status(400).json({
+            error: true,
+            message: "Erro: código não cadastrado"
+        });
+    });
+});
+
+app.get('/atualizaservico', async(req,res)=>{
+    await servico.findByPk(1)
+    .then(serv =>{
+        serv.nome = 'HTML/CSS/JS';
+        serv.descricao = 'Páginas estáticas e dinâmicas estelizadas';
+        serv.save();
+        return res.json({serv});
+    });
+});
 
 app.listen(port,(req,res)=>{
     console.log('Servidor ativo: http://localhost:3001');
