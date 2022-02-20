@@ -1,6 +1,8 @@
 const express = require('express');
 const cors = require('cors');
 
+const { Sequelize } = require('./models');
+
 const models = require('./models');
 
 const app =express();
@@ -116,16 +118,48 @@ let port=process.env.PORT || 3001;
 
 app.get('/listaservicos', async(req,res)=>{
     await servico.findAll({
-        // raw: true
-        order:[['nome','ASC']]
+        raw: true
+        // order:[['nome','DESC']]
     }).then(function(servicos){
         res.json({servicos})
+    });
+});
+
+app.get('/listaclientes', async(req,res)=>{
+    await cliente.findAll({
+        raw: true
+        // order:[['nome','ASC']]
+    })
+    .then(function(clientes){
+        res.json({clientes})
+    });
+});
+
+app.get('/listapedidos', async(req,res)=>{
+    await pedido.findAll({
+        raw: true
+        // order:[['nome','ASC']]
+    })
+    .then(function(pedidos){
+        res.json({pedidos})
     });
 });
 
 app.get('/ofertaservicos', async(req,res)=>{
     await servico.count('id').then(function(servicos){
         res.json({servicos});
+    });
+});
+
+app.get('/nossosclientes', async(req,res)=>{
+    await cliente.count('id').then(function(clientes){
+        res.json({clientes});
+    });
+});
+
+app.get('/nossospedidos', async(req,res)=>{
+    await pedido.count('id').then(function(pedidos){
+        res.json({pedidos});
     });
 });
 
@@ -144,13 +178,111 @@ app.get('/servico/:id', async(req,res)=>{
     });
 });
 
-app.get('/atualizaservico', async(req,res)=>{
-    await servico.findByPk(1)
-    .then(serv =>{
-        serv.nome = 'HTML/CSS/JS';
-        serv.descricao = 'Páginas estáticas e dinâmicas estelizadas';
-        serv.save();
-        return res.json({serv});
+// app.get('/atualizaservico', async(req,res)=>{
+//     await servico.findByPk(1)
+//     .then(serv =>{
+//         serv.nome = 'HTML/CSS/JS';
+//         serv.descricao = 'Páginas estáticas e dinâmicas estelizadas';
+//         serv.save();
+//         return res.json({serv});
+//     });
+// });
+
+// app.put('/atualizaservico', async(req,res)=>{
+//     await servico.uptade(req.body,{
+//         where: {id: req.body.id}
+//     }).then(function(){
+//         return res.json({
+//             error: false,
+//             message:"Serviço foi alterado com sucesso!"
+//         });
+//     }).catch(function(erro){
+//         return res.status(400).json({
+//             error: true,
+//             message: "Erro na alteração do serviço"
+//         });
+//     });
+// });
+
+// app.get('/excluircliente/:id', async(req,res)=>{
+//     await cliente.destroy(req.body,{
+//         where: {id: req.body.id}
+//     }).then(function(){
+//         return res.json({
+//             error: false,
+//             message:"Cliente foi excluido com sucesso!"
+//         });
+//     }).catch(function(erro){
+//         return res.status(400).json({
+//             error: true,
+//             message: "Erro ao excluir o cliente"
+//         });
+//     });
+// });
+
+app.get('/pedidos/:id', async(req,res)=>{
+    await pedido.findByPk(req.params.id,{include:[{all: true}]})
+    .then(ped =>{
+        return res.json({ped});
+    });
+});
+
+app.put('/pedidos/:id/editaritem', async(req,res)=>{
+    const item = {
+        quantidade: req.body.quantidade,
+        valor: req.body.valor 
+    }
+
+    if (!await pedido.findByPk(req.params.id)){
+        return res.status(400).json({
+            error: true,
+            message: "Pedido não encontrado."
+        });
+    };
+
+    if (!await servico.findByPk(req.body.ServicoId)){
+        return res.status(400).json({
+            error: true,
+            message: "Serviço não encontrado"
+        });
+    };
+
+    await itempedido.uptade(item,{
+        where: Sequelize.and({ServicoId: req.body.ServicoId},
+                        {PedidoId: req.params.id})
+    }).then(function(itens){
+        return res.json({
+            error: false,
+            message: "Pedido alterado com sucesso!",
+            itens
+        });
+    }).catch(function(error){
+        return res.status(400).json({
+            error: true,
+            message:"Erro: não foi possível fazer a alteração"
+        });
+    });
+});
+
+// app.get('/excluircliente', async(req,res)=>{
+//     await cliente.destroy({
+//         where:{id:2}
+//     });
+// });
+
+app.get('/excluircliente/:id', async(req,res)=>{
+    await cliente.destroy({
+        where:{id: req.params.id}
+    }).then(function(){
+        return res.json({
+            error: false,
+            message: "Cliente excluido com sucesso!"
+        });
+    }).catch(function(erro){
+        return res.status(400).json({
+            error: true,
+            message: "Erro ao tentar excluir"
+        });
     });
 });
 
