@@ -188,37 +188,21 @@ app.get('/servico/:id', async(req,res)=>{
 //     });
 // });
 
-// app.put('/atualizaservico', async(req,res)=>{
-//     await servico.uptade(req.body,{
-//         where: {id: req.body.id}
-//     }).then(function(){
-//         return res.json({
-//             error: false,
-//             message:"Serviço foi alterado com sucesso!"
-//         });
-//     }).catch(function(erro){
-//         return res.status(400).json({
-//             error: true,
-//             message: "Erro na alteração do serviço"
-//         });
-//     });
-// });
-
-// app.get('/excluircliente/:id', async(req,res)=>{
-//     await cliente.destroy(req.body,{
-//         where: {id: req.body.id}
-//     }).then(function(){
-//         return res.json({
-//             error: false,
-//             message:"Cliente foi excluido com sucesso!"
-//         });
-//     }).catch(function(erro){
-//         return res.status(400).json({
-//             error: true,
-//             message: "Erro ao excluir o cliente"
-//         });
-//     });
-// });
+app.put('/atualizaservico', async(req,res)=>{
+    await servico.update(req.body,{
+        where: {id: req.body.id}
+    }).then(function(){
+        return res.json({
+            error: false,
+            message:"Serviço foi alterado com sucesso!"
+        });
+    }).catch(function(erro){
+        return res.status(400).json({
+            error: true,
+            message: "Erro na alteração do serviço"
+        });
+    });
+});
 
 app.get('/pedidos/:id', async(req,res)=>{
     await pedido.findByPk(req.params.id,{include:[{all: true}]})
@@ -247,7 +231,7 @@ app.put('/pedidos/:id/editaritem', async(req,res)=>{
         });
     };
 
-    await itempedido.uptade(item,{
+    await itempedido.update(item,{
         where: Sequelize.and({ServicoId: req.body.ServicoId},
                         {PedidoId: req.params.id})
     }).then(function(itens){
@@ -264,11 +248,40 @@ app.put('/pedidos/:id/editaritem', async(req,res)=>{
     });
 });
 
-// app.get('/excluircliente', async(req,res)=>{
-//     await cliente.destroy({
-//         where:{id:2}
-//     });
-// });
+app.put('/clientes/:id/editarcliente', async(req,res)=>{
+    const itemCliente = {
+        nome: req.body.nome,
+        endereco: req.body.endereco,
+        cidade: req.body.cidade,
+        uf: req.body.uf,
+        nascimento: req.body.nascimento,
+        clienteDesde: req.body.clienteDesde
+    };
+
+    if (!await cliente.findByPk(req.params.id)){
+        return res.status(400).json({
+            error: true,
+            message: "Cliente não encontrado."
+        });
+    };
+
+    await cliente.update(itemCliente,{
+        where: {id: req.body.id}
+    }).then(function(itens){
+        return res.json({
+            error: false,
+            message: "Cliente alterado com sucesso!",
+            itens
+        });
+    }).catch(function(error){
+        return res.status(400).json({
+            error: true,
+            message:"Erro: não foi possível fazer a alteração"
+        });
+    });
+});
+
+
 
 app.get('/excluircliente/:id', async(req,res)=>{
     await cliente.destroy({
