@@ -177,20 +177,20 @@ app.get('/listaitenspedido', async(req,res)=>{
     });
 });
 
-app.get('/listaprodutos', async(req,res)=>{
-    await produto.findAll({
-        raw: true
-    }).then(function(produtos){
-        res.json({produtos})
-    });
-});
-
 app.get('/listacompras', async(req,res)=>{
     await compra.findAll({
         raw: true
     })
     .then(function(compras){
         res.json({compras})
+    });
+});
+
+app.get('/listaprodutos', async(req,res)=>{
+    await produto.findAll({
+        raw: true
+    }).then(function(produtos){
+        res.json({produtos})
     });
 });
 
@@ -202,7 +202,6 @@ app.get('/listaitenscompra', async(req,res)=>{
         res.json({itenscompra})
     });
 });
-
 
 app.get('/ofertaservicos', async(req,res)=>{
     await servico.count('id').then(function(servicos){
@@ -244,7 +243,7 @@ app.get('/servico/:id', async(req,res)=>{
     });
 });
 
-// atualizar e/ou editar
+// atualizar - editar
 
 app.put('/clientes/:id/editarcliente', async(req,res)=>{
     const itemCliente = {
@@ -295,6 +294,42 @@ app.put('/atualizaservico', async(req,res)=>{
     });
 });
 
+app.put('/pedidos/:id/editarpedido', async(req,res)=>{
+    const item = {
+        dataPedido: req.body.dataPedido
+    }
+
+    if (!await pedido.findByPk(req.params.id)){
+        return res.status(400).json({
+            error: true,
+            message: "Pedido não encontrado."
+        });
+    };
+
+    if (!await cliente.findByPk(req.body.ClienteId)){
+        return res.status(400).json({
+            error: true,
+            message: "Cliente não encontrado"
+        });
+    };
+
+    await pedido.update(item,{
+        where: Sequelize.and({ClienteId: req.body.ClienteId},
+                        {id: req.body.id})
+    }).then(function(itens){
+        return res.json({
+            error: false,
+            message: "Pedido alterado com sucesso!",
+            itens
+        });
+    }).catch(function(error){
+        return res.status(400).json({
+            error: true,
+            message:"Erro: não foi possível fazer a alteração"
+        });
+    });
+});
+
 app.put('/pedidos/:id/editaritem', async(req,res)=>{
     const item = {
         quantidade: req.body.quantidade,
@@ -321,7 +356,96 @@ app.put('/pedidos/:id/editaritem', async(req,res)=>{
     }).then(function(itens){
         return res.json({
             error: false,
-            message: "Pedido alterado com sucesso!",
+            message: "Item pedido alterado com sucesso!",
+            itens
+        });
+    }).catch(function(error){
+        return res.status(400).json({
+            error: true,
+            message:"Erro: não foi possível fazer a alteração no item pedido"
+        });
+    });
+});
+
+app.put('/atualizaproduto', async(req,res)=>{
+    await produto.update(req.body,{
+        where: {id: req.body.id}
+    }).then(function(){
+        return res.json({
+            error: false,
+            message:"Produto foi alterado com sucesso!"
+        });
+    }).catch(function(erro){
+        return res.status(400).json({
+            error: true,
+            message: "Erro na alteração do produto"
+        });
+    });
+});
+
+app.put('/compras/:id/editarcompra', async(req,res)=>{
+    const item = {
+        data: req.body.data
+    }
+
+    if (!await compra.findByPk(req.params.id)){
+        return res.status(400).json({
+            error: true,
+            message: "Compra não encontrada."
+        });
+    };
+
+    if (!await cliente.findByPk(req.body.ClienteId)){
+        return res.status(400).json({
+            error: true,
+            message: "Cliente não encontrado"
+        });
+    };
+
+    await compra.update(item,{
+        where: Sequelize.and({ClienteId: req.body.ClienteId},
+                        {id: req.body.id})
+    }).then(function(itens){
+        return res.json({
+            error: false,
+            message: "Compra alterada com sucesso!",
+            itens
+        });
+    }).catch(function(error){
+        return res.status(400).json({
+            error: true,
+            message:"Erro: não foi possível fazer a alteração"
+        });
+    });
+});
+
+app.put('/compras/:id/editaritemcompra', async(req,res)=>{
+    const item = {
+        quantidade: req.body.quantidade,
+        valor: req.body.valor 
+    }
+
+    if (!await compra.findByPk(req.params.id)){
+        return res.status(400).json({
+            error: true,
+            message: "Compra não encontrada."
+        });
+    };
+
+    if (!await produto.findByPk(req.body.ServicoId)){
+        return res.status(400).json({
+            error: true,
+            message: "Produto não encontrado"
+        });
+    };
+
+    await itemcompra.update(item,{
+        where: Sequelize.and({ProdutoId: req.body.ProdutoId},
+                        {CompraId: req.params.id})
+    }).then(function(itens){
+        return res.json({
+            error: false,
+            message: "Compra alterado com sucesso!",
             itens
         });
     }).catch(function(error){
@@ -334,7 +458,7 @@ app.put('/pedidos/:id/editaritem', async(req,res)=>{
 
 // exclusão
 
-app.get('/excluircliente/:id', async(req,res)=>{
+app.delete('/excluircliente/:id', async(req,res)=>{
     await cliente.destroy({
         where:{id: req.params.id}
     }).then(function(){
@@ -345,7 +469,104 @@ app.get('/excluircliente/:id', async(req,res)=>{
     }).catch(function(erro){
         return res.status(400).json({
             error: true,
-            message: "Erro ao tentar excluir"
+            message: "Erro ao tentar excluir cliente"
+        });
+    });
+});
+
+app.delete('/excluirservico/:id', async(req,res)=>{
+    await servico.destroy({
+        where:{id: req.params.id}
+    }).then(function(){
+        return res.json({
+            error: false,
+            message: "Serviço excluído com sucesso!"
+        });
+    }).catch(function(erro){
+        return res.status(400).json({
+            error: true,
+            message: "Erro ao tentar excluir serviço"
+        });
+    });
+});
+
+app.delete('/excluirpedido/:id', async(req,res)=>{
+    await pedido.destroy({
+        where:{id: req.params.id}
+    }).then(function(){
+        return res.json({
+            error: false,
+            message: "Pedido excluído com sucesso!"
+        });
+    }).catch(function(erro){
+        return res.status(400).json({
+            error: true,
+            message: "Erro ao tentar excluir pedido"
+        });
+    });
+});
+
+
+app.delete('/excluiritenspedido/:id', async(req,res)=>{
+    await itempedido.destroy({
+        where:{id: req.params.id}
+    }).then(function(){
+        return res.json({
+            error: false,
+            message: "Item pedido excluído com sucesso!"
+        });
+    }).catch(function(erro){
+        return res.status(400).json({
+            error: true,
+            message: "Erro ao tentar excluir item pedido"
+        });
+    });
+});
+
+app.delete('/excluircompra/:id', async(req,res)=>{
+    await compra.destroy({
+        where:{id: req.params.id}
+    }).then(function(){
+        return res.json({
+            error: false,
+            message: "Compra excluída com sucesso!"
+        });
+    }).catch(function(erro){
+        return res.status(400).json({
+            error: true,
+            message: "Erro ao tentar excluir compra"
+        });
+    });
+});
+
+app.delete('/excluirproduto/:id', async(req,res)=>{
+    await produto.destroy({
+        where:{id: req.params.id}
+    }).then(function(){
+        return res.json({
+            error: false,
+            message: "Produto excluído com sucesso!"
+        });
+    }).catch(function(erro){
+        return res.status(400).json({
+            error: true,
+            message: "Erro ao tentar excluir produto"
+        });
+    });
+});
+
+app.delete('/excluiritenscompra/:id', async(req,res)=>{
+    await itemcompra.destroy({
+        where:{id: req.params.id}
+    }).then(function(){
+        return res.json({
+            error: false,
+            message: "Item de compra excluído com sucesso!"
+        });
+    }).catch(function(erro){
+        return res.status(400).json({
+            error: true,
+            message: "Erro ao tentar excluir item de compra"
         });
     });
 });
