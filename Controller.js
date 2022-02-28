@@ -315,7 +315,7 @@ app.put('/pedidos/:id/editarpedido', async(req,res)=>{
 
     await pedido.update(item,{
         where: Sequelize.and({ClienteId: req.body.ClienteId},
-                        {id: req.body.id})
+                        {id: req.params.id})
     }).then(function(itens){
         return res.json({
             error: false,
@@ -330,7 +330,7 @@ app.put('/pedidos/:id/editarpedido', async(req,res)=>{
     });
 });
 
-app.put('/pedidos/:id/editaritem', async(req,res)=>{
+app.put('/pedidos/:id/editaritempedido', async(req,res)=>{
     const item = {
         quantidade: req.body.quantidade,
         valor: req.body.valor 
@@ -404,7 +404,7 @@ app.put('/compras/:id/editarcompra', async(req,res)=>{
 
     await compra.update(item,{
         where: Sequelize.and({ClienteId: req.body.ClienteId},
-                        {id: req.body.id})
+                        {id: req.params.id})
     }).then(function(itens){
         return res.json({
             error: false,
@@ -432,7 +432,7 @@ app.put('/compras/:id/editaritemcompra', async(req,res)=>{
         });
     };
 
-    if (!await produto.findByPk(req.body.ServicoId)){
+    if (!await produto.findByPk(req.body.ProdutoId)){
         return res.status(400).json({
             error: true,
             message: "Produto não encontrado"
@@ -445,7 +445,7 @@ app.put('/compras/:id/editaritemcompra', async(req,res)=>{
     }).then(function(itens){
         return res.json({
             error: false,
-            message: "Compra alterado com sucesso!",
+            message: "Item compra alterado com sucesso!",
             itens
         });
     }).catch(function(error){
@@ -507,9 +507,22 @@ app.delete('/excluirpedido/:id', async(req,res)=>{
 });
 
 
-app.delete('/excluiritenspedido/:id', async(req,res)=>{
+app.delete('/pedidos/:id/excluiritenspedido', async(req,res)=>{
+    if (!await compra.findByPk(req.params.id)){
+        return res.status(400).json({
+            error: true,
+            message: "Pedido não encontrado."
+        });
+    };
+    if (!await produto.findByPk(req.body.ProdutoId)){
+        return res.status(400).json({
+            error: true,
+            message: "Serviço não encontrado"
+        });
+    };
     await itempedido.destroy({
-        where:{id: req.params.id}
+        where: Sequelize.and({ProdutoId: req.body.ServicoId},
+            {PedidoId: req.params.id})
     }).then(function(){
         return res.json({
             error: false,
@@ -555,9 +568,22 @@ app.delete('/excluirproduto/:id', async(req,res)=>{
     });
 });
 
-app.delete('/excluiritenscompra/:id', async(req,res)=>{
+app.delete('/compras/:id/excluiritenscompra', async(req,res)=>{
+    if (!await compra.findByPk(req.params.id)){
+        return res.status(400).json({
+            error: true,
+            message: "Compra não encontrada."
+        });
+    };
+    if (!await produto.findByPk(req.body.ProdutoId)){
+        return res.status(400).json({
+            error: true,
+            message: "Produto não encontrado"
+        });
+    };
     await itemcompra.destroy({
-        where:{id: req.params.id}
+        where: Sequelize.and({ProdutoId: req.body.ProdutoId},
+            {CompraId: req.params.id})
     }).then(function(){
         return res.json({
             error: false,
