@@ -243,6 +243,38 @@ app.get('/servico/:id', async(req,res)=>{
     });
 });
 
+app.get('/servico/:id/pedidos', async(req,res)=>{
+    await itempedido.findAll({
+        where: {ServicoId: req.params.id}})
+    .then(item =>{
+        return res.json({
+            error: false,
+            item
+        });
+    }).catch(function(erro){
+        return res.status(400).json({
+            error: true,
+            message: "Erro: não foi possível conectar!"
+        });
+    });
+});
+
+app.get('/produto/:id/compras', async(req,res)=>{
+    await itemcompra.findAll({
+        where: {ProdutoId: req.params.id}})
+    .then(itens =>{
+        return res.json({
+            error: false,
+            itens
+        });
+    }).catch(function(erro){
+        return res.status(400).json({
+            error: true,
+            message: "Erro: não foi possível conectar!"
+        });
+    });
+});
+
 // atualizar - editar
 
 app.put('/clientes/:id/editarcliente', async(req,res)=>{
