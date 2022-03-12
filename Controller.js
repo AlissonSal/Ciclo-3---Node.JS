@@ -221,6 +221,13 @@ app.get('/nossospedidos', async(req,res)=>{
     });
 });
 
+app.get('/clientes/:id', async(req,res)=>{
+    await cliente.findByPk(req.params.id,{include:[{all: true}]})
+    .then(cli =>{
+        return res.json({cli});
+    });
+});
+
 app.get('/pedidos/:id', async(req,res)=>{
     await pedido.findByPk(req.params.id,{include:[{all: true}]})
     .then(ped =>{
@@ -228,18 +235,24 @@ app.get('/pedidos/:id', async(req,res)=>{
     });
 });
 
+app.get('/compras/:id', async(req,res)=>{
+    await compra.findByPk(req.params.id,{include:[{all: true}]})
+    .then(comp =>{
+        return res.json({comp});
+    });
+});
+
 app.get('/servico/:id', async(req,res)=>{
-    await servico.findByPk(req.params.id)
+    await servico.findByPk(req.params.id,{include:[{all: true}]})
     .then(serv =>{
-        return res.json({
-            error: false,
-            serv
-        });
-    }).catch(function(erro){
-        return res.status(400).json({
-            error: true,
-            message: "Erro: código não cadastrado"
-        });
+        return res.json({serv});
+    });
+});
+
+app.get('/produto/:id', async(req,res)=>{
+    await produto.findByPk(req.params.id,{include:[{all: true}]})
+    .then(prod =>{
+        return res.json({prod});
     });
 });
 
@@ -266,6 +279,38 @@ app.get('/produto/:id/compras', async(req,res)=>{
         return res.json({
             error: false,
             itens
+        });
+    }).catch(function(erro){
+        return res.status(400).json({
+            error: true,
+            message: "Erro: não foi possível conectar!"
+        });
+    });
+});
+
+app.get('/pedido/:id/itenspedidos', async(req,res)=>{
+    await itempedido.findAll({
+        where: {PedidoId: req.params.id}})
+    .then(item =>{
+        return res.json({
+            error: false,
+            item
+        });
+    }).catch(function(erro){
+        return res.status(400).json({
+            error: true,
+            message: "Erro: não foi possível conectar!"
+        });
+    });
+});
+
+app.get('/compra/:id/itenscomprados', async(req,res)=>{
+    await itemcompra.findAll({
+        where: {CompraId: req.params.id}})
+    .then(itcompra =>{
+        return res.json({
+            error: false,
+            itcompra
         });
     }).catch(function(erro){
         return res.status(400).json({
@@ -309,6 +354,36 @@ app.put('/clientes/:id/editarcliente', async(req,res)=>{
         });
     });
 });
+
+app.put('/servicos/:id/editarservico', async(req,res)=>{
+    const itemServico = {
+        nome: req.body.nome,
+        descricao: req.body.descricao
+    };
+
+    if (!await servico.findByPk(req.params.id)){
+        return res.status(400).json({
+            error: true,
+            message: "Serviço não encontrado."
+        });
+    };
+
+    await servico.update(itemServico,{
+        where: {id: req.body.id}
+    }).then(function(itens){
+        return res.json({
+            error: false,
+            message: "Serviço alterado com sucesso!",
+            itens
+        });
+    }).catch(function(error){
+        return res.status(400).json({
+            error: true,
+            message:"Erro: não foi possível fazer a alteração"
+        });
+    });
+});
+
 
 app.put('/atualizaservico', async(req,res)=>{
     await servico.update(req.body,{
@@ -395,6 +470,35 @@ app.put('/pedidos/:id/editaritempedido', async(req,res)=>{
         return res.status(400).json({
             error: true,
             message:"Erro: não foi possível fazer a alteração no item pedido"
+        });
+    });
+});
+
+app.put('/produtos/:id/editarproduto', async(req,res)=>{
+    const itemProduto = {
+        nome: req.body.nome,
+        descricao: req.body.descricao
+    };
+
+    if (!await produto.findByPk(req.params.id)){
+        return res.status(400).json({
+            error: true,
+            message: "Produto não encontrado."
+        });
+    };
+
+    await produto.update(itemProduto,{
+        where: {id: req.body.id}
+    }).then(function(itens){
+        return res.json({
+            error: false,
+            message: "Produto alterado com sucesso!",
+            itens
+        });
+    }).catch(function(error){
+        return res.status(400).json({
+            error: true,
+            message:"Erro: não foi possível fazer a alteração"
         });
     });
 });
